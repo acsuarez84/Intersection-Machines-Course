@@ -1,1 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intersectional Machines — Identity Construction Through AI</title>
+<style>
+  :root{
+    --ink:#14162B;
+    --ink2:#1E2149;
+    --ink3:#272B5C;
+    --paper:#F7F1E4;
+    --paper2:#EFE6D2;
+    --rose:#C4507A;
+    --gold:#D9A441;
+    --teal:#5E9E9B;
+    --text:#EAE4D6;
+    --text-dim:#A9A2C0;
+    --ink-text:#221B32;
+    --ink-text-dim:#54506B;
+    --radius:16px;
+    --serif:Georgia,'Iowan Old Style','Palatino Linotype','Book Antiqua',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:'SF Mono','Cascadia Code',Consolas,'Liberation Mono',Menlo,monospace;
+    --maxw:920px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.001s !important; transition-duration:0.001s !important;} }
+  body{
+    margin:0; background:var(--ink); color:var(--text);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--gold);}
+  ::selection{ background:var(--rose); color:var(--ink); }
+  :focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
 
+  h1,h2,h3{ font-family:var(--serif); font-weight:700; margin:0 0 .5em; color:var(--text); letter-spacing:-.01em; }
+  h2{ font-size:clamp(1.5rem,3.2vw,2.1rem); }
+  h3{ font-size:1.2rem; font-weight:600; }
+  .eyebrow{ font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:.6em; display:block; }
+  p{ margin:0 0 1em; }
+  .lede{ color:var(--text-dim); font-size:1.05rem; }
+
+  /* ===== thread spine (signature element) ===== */
+  .thread-rail{
+    position:fixed; left:0; top:0; bottom:0; width:46px;
+    display:flex; justify-content:center; z-index:5; pointer-events:none;
+  }
+  .thread-rail svg{ height:100%; width:100%; }
+  @media (max-width:920px){ .thread-rail{ display:none; } }
+
+  /* ===== layout shell ===== */
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; }
+  @media (min-width:921px){ .wrap{ padding-left:76px; } }
+
+  /* ===== nav ===== */
+  nav.topnav{
+    position:sticky; top:0; z-index:20;
+    backdrop-filter: blur(10px);
+    background:rgba(20,22,43,.86);
+    border-bottom:1px solid rgba(217,164,65,.18);
+  }
+  .topnav-inner{ max-width:var(--maxw); margin:0 auto; padding:14px 28px; display:flex; gap:22px; align-items:center; overflow-x:auto; }
+  @media (min-width:921px){ .topnav-inner{ padding-left:76px; } }
+  .topnav-mark{ font-family:var(--mono); font-size:.72rem; color:var(--gold); white-space:nowrap; letter-spacing:.08em; }
+  .topnav-links{ display:flex; gap:18px; flex-wrap:nowrap; }
+  .topnav-links a{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--text-dim); text-decoration:none; white-space:nowrap; padding:4px 2px; border-bottom:2px solid transparent;
+  }
+  .topnav-links a.active, .topnav-links a:hover{ color:var(--gold); border-bottom-color:var(--gold); }
+
+  /* ===== hero ===== */
+  header.hero{ padding:78px 0 50px; position:relative; }
+  .hero-title{ font-size:clamp(2.4rem,6vw,4rem); line-height:1.02; margin-bottom:.3em; }
+  .hero-title em{ font-style:italic; color:var(--rose); }
+  .hero-sub{ font-size:1.15rem; color:var(--text-dim); max-width:640px; margin-bottom:1.8em; }
+  .factstrip{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
+    background:rgba(217,164,65,.25); border:1px solid rgba(217,164,65,.25); border-radius:var(--radius); overflow:hidden;
+  }
+  .fact{ background:var(--ink2); padding:16px 18px; }
+  .fact .k{ font-family:var(--mono); font-size:.66rem; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); display:block; margin-bottom:.4em; }
+  .fact .v{ font-size:.88rem; color:var(--text); }
+
+  /* ===== sections ===== */
+  section{ padding:56px 0; border-top:1px solid rgba(234,228,214,.08); }
+  section:first-of-type{ border-top:none; }
+
+  /* ===== paper card (for notes, callouts, journal-feel content) ===== */
+  .paper{
+    background:var(--paper); color:var(--ink-text); border-radius:var(--radius);
+    padding:22px 24px; margin:18px 0; box-shadow:0 10px 30px rgba(0,0,0,.25);
+    border:1px solid var(--paper2);
+  }
+  .paper h4{ font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--rose); margin:0 0 .6em; }
+  .paper p, .paper li{ color:var(--ink-text-dim); font-size:.95rem; }
+  .paper strong{ color:var(--ink-text); }
+
+  details.paper{ padding:0; overflow:hidden; }
+  details.paper summary{
+    list-style:none; cursor:pointer; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-text);
+  }
+  details.paper summary::-webkit-details-marker{ display:none; }
+  details.paper summary::after{ content:"+"; font-family:var(--sans); font-size:1.3rem; color:var(--rose); transition:transform .2s; }
+  details.paper[open] summary::after{ content:"–"; }
+  details.paper .body{ padding:0 22px 20px; }
+  details.paper .body p{ color:var(--ink-text-dim); font-size:.94rem; }
+
+  ul.plain{ margin:0 0 1em; padding-left:1.2em; }
+  ul.plain li{ margin-bottom:.5em; color:var(--text-dim); }
+  .paper ul.plain li{ color:var(--ink-text-dim); }
+
+  /* ===== two-decision fork ===== */
+  .fork{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0; }
+  @media (max-width:680px){ .fork{ grid-template-columns:1fr; } }
+  .fork-card{ background:var(--ink2); border:1px solid rgba(217,164,65,.2); border-radius:var(--radius); padding:18px 18px 20px; }
+  .fork-card h4{ font-family:var(--mono); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--gold); margin:0 0 .8em; }
+  .pillrow{ display:flex; gap:8px; margin-bottom:14px; }
+  .pill{
+    flex:1; background:transparent; border:1px solid rgba(234,228,214,.28); color:var(--text-dim);
+    font-family:var(--sans); font-size:.82rem; padding:8px 10px; border-radius:999px; cursor:pointer; transition:.15s;
+  }
+  .pill.sel{ background:var(--rose); border-color:var(--rose); color:#fff; }
+  .fork-desc{ font-size:.9rem; color:var(--text-dim); min-height:74px; }
+  .fork-desc strong{ color:var(--text); }
+
+  /* ===== permitted / not permitted ===== */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0; }
+  @media (max-width:680px){ .grid2{ grid-template-columns:1fr; } }
+  .permit{ border-radius:var(--radius); padding:18px 18px; }
+  .permit.yes{ background:rgba(94,158,155,.12); border:1px solid rgba(94,158,155,.4); }
+  .permit.no{ background:rgba(196,80,122,.1); border:1px solid rgba(196,80,122,.4); }
+  .permit h4{ font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; margin:0 0 .7em; }
+  .permit.yes h4{ color:var(--teal); }
+  .permit.no h4{ color:var(--rose); }
+  .permit li{ font-size:.9rem; color:var(--text-dim); margin-bottom:.6em; }
+
+  /* ===== purpose timeline ===== */
+  .timeline{ display:flex; flex-direction:column; gap:0; margin:24px 0; }
+  .tl-item{ display:grid; grid-template-columns:40px 1fr; gap:16px; position:relative; padding-bottom:26px; }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-dot{ width:40px; height:40px; border-radius:50%; background:var(--ink2); border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:var(--mono); color:var(--gold); font-size:.8rem; z-index:1; }
+  .tl-item:not(:last-child)::before{ content:""; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:linear-gradient(var(--gold),var(--rose)); opacity:.35; }
+  .tl-body h4{ margin:0 0 .3em; font-family:var(--sans); font-weight:600; color:var(--text); font-size:.98rem; }
+  .tl-body p{ color:var(--text-dim); font-size:.92rem; margin:0; }
+
+  /* ===== tabs (the work) ===== */
+  .tabbar{ display:flex; gap:6px; margin-bottom:22px; flex-wrap:wrap; }
+  .tabbtn{
+    font-family:var(--mono); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em;
+    background:var(--ink2); border:1px solid rgba(217,164,65,.25); color:var(--text-dim);
+    padding:10px 16px; border-radius:999px; cursor:pointer; transition:.15s;
+  }
+  .tabbtn.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
+  .tabpanel{ display:none; }
+  .tabpanel.active{ display:block; animation:fadein .25s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .chip{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; background:rgba(196,80,122,.18); color:var(--rose); padding:3px 9px; border-radius:999px; margin-right:6px; margin-bottom:10px; }
+
+  /* ===== artifact option cards ===== */
+  .optgrid{ display:grid; grid-template-columns:1fr; gap:12px; margin:18px 0; }
+  .optcard{ background:var(--ink2); border:1px solid rgba(234,228,214,.14); border-radius:var(--radius); padding:16px 18px; }
+  .optcard h4{ margin:0 0 .4em; font-size:1rem; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .optcard p{ margin:0; color:var(--text-dim); font-size:.9rem; }
+
+  /* ===== reflection checklist ===== */
+  .checklist{ list-style:none; margin:18px 0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .checklist li{ background:var(--ink2); border:1px solid rgba(234,228,214,.12); border-radius:12px; padding:12px 16px; display:flex; gap:12px; align-items:flex-start; }
+  .checklist input{ margin-top:4px; width:16px; height:16px; accent-color:var(--gold); flex-shrink:0; }
+  .checklist label{ font-size:.92rem; color:var(--text-dim); cursor:pointer; }
+  .checklist input:checked + label{ color:var(--text-dim); text-decoration:line-through; opacity:.55; }
+  .progresswrap{ display:flex; align-items:center; gap:12px; margin-top:16px; }
+  .progressbar{ flex:1; height:6px; background:var(--ink3); border-radius:99px; overflow:hidden; }
+  .progressbar-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--rose),var(--gold)); transition:width .3s ease; }
+  #progresslabel{ font-family:var(--mono); font-size:.75rem; color:var(--text-dim); white-space:nowrap; }
+
+  /* ===== examples gallery ===== */
+  .gallerygrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-top:22px; }
+  .gcard{
+    background:var(--ink2); border:1px solid rgba(217,164,65,.2); border-radius:var(--radius);
+    padding:18px; cursor:pointer; text-align:left; color:var(--text); font-family:var(--sans);
+    transition:.18s; display:flex; flex-direction:column; gap:10px; height:100%;
+  }
+  .gcard:hover{ border-color:var(--gold); transform:translateY(-3px); box-shadow:0 12px 26px rgba(0,0,0,.3); }
+  .gcard .medium{ font-family:var(--mono); font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; color:var(--gold); }
+  .gcard h3{ font-size:1.05rem; margin:0; }
+  .gcard .blurb{ font-size:.86rem; color:var(--text-dim); flex:1; }
+  .gcard .openhint{ font-family:var(--mono); font-size:.7rem; color:var(--rose); }
+
+  /* ===== modal ===== */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(10,10,20,.72); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background:var(--paper); color:var(--ink-text); max-width:560px; width:100%; border-radius:var(--radius);
+    padding:30px 30px 26px; max-height:85vh; overflow-y:auto; position:relative;
+  }
+  .modal-close{ position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.4rem; color:var(--ink-text-dim); cursor:pointer; line-height:1; }
+  .modal .medium{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--rose); display:block; margin-bottom:.6em; }
+  .modal h3{ font-family:var(--serif); font-size:1.5rem; margin:0 0 .5em; color:var(--ink-text); }
+  .modal p{ color:var(--ink-text-dim); font-size:.95rem; }
+  .modal .argue{ background:var(--paper2); border-left:3px solid var(--rose); padding:10px 14px; margin-top:14px; font-size:.88rem; font-style:italic; color:var(--ink-text); }
+
+  footer{ padding:50px 0 90px; text-align:center; }
+
+  /* ===== rubric table ===== */
+  .rubric-table{ width:100%; border-collapse:collapse; margin:20px 0; }
+  .rubric-table th{ background:var(--ink3); color:var(--gold); font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; text-align:left; padding:12px 14px; }
+  .rubric-table td{ padding:14px; border-bottom:1px solid rgba(234,228,214,.1); vertical-align:top; font-size:.9rem; color:var(--text-dim); }
+  .rubric-table tr:nth-child(even) td{ background:rgba(234,228,214,.03); }
+  .rubric-table td.crit{ color:var(--text); font-weight:600; width:22%; }
+  .rubric-table td.weight{ color:var(--rose); font-family:var(--mono); width:10%; white-space:nowrap; }
+  .rubric-table ul{ margin:0; padding-left:1.1em; }
+  .rubric-table li{ margin-bottom:.4em; }
+  @media (max-width:680px){
+    .rubric-table thead{ display:none; }
+    .rubric-table tr{ display:block; margin-bottom:18px; background:var(--ink2); border-radius:12px; padding:12px 14px; }
+    .rubric-table td{ display:block; border:none; padding:4px 0; }
+    .rubric-table td.weight::before{ content:"Weight: "; color:var(--gold); font-family:var(--mono); font-size:.7rem; }
+  }
+  footer p{ color:var(--text-dim); font-size:.85rem; }
+  footer a{ color:var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="thread-rail" aria-hidden="true">
+  <svg viewBox="0 0 46 1000" preserveAspectRatio="none">
+    <path d="M23,0 C40,60 6,120 23,180 C40,240 6,300 23,360 C40,420 6,480 23,540 C40,600 6,660 23,720 C40,780 6,840 23,900 C34,940 14,970 23,1000"
+      fill="none" stroke="#D9A441" stroke-width="2" opacity="0.5"/>
+    <path d="M23,0 C6,60 40,120 23,180 C6,240 40,300 23,360 C6,420 40,480 23,540 C6,600 40,660 23,720 C6,780 40,840 23,900 C12,940 32,970 23,1000"
+      fill="none" stroke="#C4507A" stroke-width="2" opacity="0.5"/>
+  </svg>
+</div>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <span class="topnav-mark">IM · S04</span>
+    <div class="topnav-links">
+      <a href="#overview" data-nav>Overview</a>
+      <a href="#making" data-nav>Making</a>
+      <a href="#readings" data-nav>Readings</a>
+      <a href="#ai" data-nav>AI &amp; You</a>
+      <a href="#assignment" data-nav>The Assignment</a>
+      <a href="#work" data-nav>The Work</a>
+      <a href="#rubric" data-nav>Rubric</a>
+      <a href="#examples" data-nav>Examples</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="hero" id="overview">
+    <span class="eyebrow">Signature Assignment · Unit 4</span>
+    <h1 class="hero-title">Intersectional <em>Machines</em></h1>
+    <p class="hero-sub">Identity Construction Through AI — an evidence-based investigation of how a generative AI tool represents an identity marker of your choosing, answered through a creative artifact and a written reflection.</p>
+    <div class="factstrip">
+      <div class="fact"><span class="k">Due</span><span class="v">End of Unit 4 (Week 16). Journal checkpoints: Weeks 4, 8, 12.</span></div>
+      <div class="fact"><span class="k">Format</span><span class="v">Multimedia artifact + 500–800 word reflection.</span></div>
+      <div class="fact"><span class="k">Weight</span><span class="v">40% of final grade.</span></div>
+      <div class="fact"><span class="k">Artifact options</span><span class="v">Zine, website, Claude artifact, or GitHub — any of them AI-free if you choose.</span></div>
+    </div>
+  </header>
+
+  <section id="making">
+    <span class="eyebrow">Before you start</span>
+    <h2>A note on making as argument</h2>
+    <p>Before this assignment starts, you already know that making something can be a form of scholarly argument, not just a decoration. This came from Unit 3's short reading and discussion on "critical making," alongside the pattern-finding work in your prompt journal. Click below for the recap.</p>
+    <details class="paper">
+      <summary>What that earlier lesson gave you</summary>
+      <div class="body">
+        <p><strong>Reading:</strong> Ratto, "Critical Making: Conceptual and Material Studies in Technology and Social Life."</p>
+        <p>It gave you two things: the words to explain why the way something is made can carry meaning — why a rough, handmade zine might argue something a polished website cannot, or why a broken link might be part of the point — and one low-stakes practice round, a small "argument sketch" in a medium of your choice. So this is not the first time you've turned an idea into something you can hold or click through. If this lesson hasn't happened yet this semester, it needs to before this assignment launches.</p>
+      </div>
+    </details>
+  </section>
+
+  <section id="readings">
+    <span class="eyebrow">New for this project</span>
+    <h2>Readings for this project</h2>
+    <p>These three readings are new for Unit 4 — short, undergraduate-level, and pulled directly from UCF's Digital Humanities Research Guide, "Access, Equity &amp; Ethics" section, so you're working from texts the field has already vetted as a starting point. Each is linked to its real source and pairs with a specific part of the project below.</p>
+    <div class="optgrid">
+      <div class="optcard">
+        <h4>📖 <a href="https://dhdebates.gc.cuny.edu/read/untitled-88c11800-9446-469b-a3be-3fdb36bfbd1e/section/2a59a6fe-3e93-43ae-a42f-1b26d1b4becc" target="_blank" rel="noopener">Williams, "Disability, Universal Design, and the Digital Humanities" (2012)</a></h4>
+        <p>Open access. Short and plainly written — makes the case that inaccessible design is a choice, not a neutral default. Useful if disability is your identity marker.</p>
+      </div>
+      <div class="optcard">
+        <h4>📖 <a href="https://direct.mit.edu/books/edited-volume/3992/chapter/166409/Introduction" target="_blank" rel="noopener">Gitelman &amp; Jackson, Introduction to "Raw Data" Is an Oxymoron (2013)</a></h4>
+        <p>Its core claim — that data is always constructed, never neutral or "raw" — is the theoretical backbone of Unit 1's idea that AI's design is not neutral.</p>
+      </div>
+      <div class="optcard">
+        <h4>📖 <a href="https://punctumbooks.com/titles/disrupting-the-digital-humanities/" target="_blank" rel="noopener">Keralis, "Disrupting Labor in Digital Humanities; or, The Classroom Is Not Your Crowd" (2018)</a></h4>
+        <p>Open access. Reframes whose labor gets erased inside digital systems — worth carrying into your reflection when you think about the human labor behind the AI tool you're studying.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai">
+    <span class="eyebrow">Two decisions, not one</span>
+    <h2>The role of AI in this assignment</h2>
+    <p class="lede">All semester, you have critiqued AI for how it affects and shapes identity. This assignment does not let you avoid AI completely — but it also does not require you to use it yourself. Even students who never prompt a system themselves have been recording what they observe about AI all semester, and that counts as real engagement.</p>
+    <p>Students sometimes read "do you use AI or not" as one yes/no choice. It's actually two independent decisions — click each option below to see what it means. Neither choice affects your grade.</p>
+
+    <div class="fork">
+      <div class="fork-card">
+        <h4>Decision A — Research method (Part 1)</h4>
+        <div class="pillrow">
+          <button class="pill sel" data-fork="a" data-val="0">Prompt it myself</button>
+          <button class="pill" data-fork="a" data-val="1">Compile published outputs</button>
+        </div>
+        <div class="fork-desc" id="fork-a-desc"><strong>Prompt it myself:</strong> log your own prompts and outputs in real time, all semester, in your prompt journal.</div>
+      </div>
+      <div class="fork-card">
+        <h4>Decision B — Production method (Part 2)</h4>
+        <div class="pillrow">
+          <button class="pill sel" data-fork="b" data-val="0">AI helps build it</button>
+          <button class="pill" data-fork="b" data-val="1">Build it AI-free</button>
+        </div>
+        <div class="fork-desc" id="fork-b-desc"><strong>AI helps build it:</strong> use AI tools for layout, starter code, or image generation — log every use in your journal.</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:34px;">Use disclaimer</h3>
+    <p>AI is a core part of this course because it is the thing we are critiquing and working with directly. The following rules apply to anyone who uses AI at any stage:</p>
+    <div class="grid2">
+      <div class="permit yes">
+        <h4>✓ AI is permitted for</h4>
+        <ul class="plain">
+          <li>Being the subject of your critique — the AI system you're studying, or something your artifact responds to.</li>
+          <li>Helping design or build your artifact (layout, starter code, images) — log every use.</li>
+          <li>Brainstorming ideas — <em>only</em> under the rules below.</li>
+        </ul>
+      </div>
+      <div class="permit no">
+        <h4>✕ AI is NOT permitted for</h4>
+        <ul class="plain">
+          <li>Replacing your own thinking and your own decisions in your writing and design.</li>
+          <li>Writing any part of your written responses for you — your journal analysis and final reflection must be in your own words.</li>
+        </ul>
+      </div>
+    </div>
+
+    <details class="paper">
+      <summary>The rules for using AI to brainstorm ideas</summary>
+      <div class="body">
+        <p>"Brainstorming with teacher permission" is not an open door. Before you can ask an AI tool for artifact ideas, you must already have written your own list of at least three ideas, dated and logged. Only after that can you ask AI for suggestions — and you need instructor permission first, so come to office hours or send an email before you do it.</p>
+        <p>Every idea an AI gives you goes into your prompt journal word-for-word, and your final reflection must include a short note on where your ideas came from: which ones were yours, which came from AI, and — in your own words, not the AI's — why you kept, combined, or dropped each one. If you can't explain your own reasoning for an idea, that's a sign the idea isn't really yours yet.</p>
+      </div>
+    </details>
+  </section>
+
+  <section id="assignment">
+    <span class="eyebrow">The big question</span>
+    <h2>What is the assignment</h2>
+    <p>All semester, we have been asking one question: how does AI shape who we are? <em>Identity Construction Through AI</em> is where you answer that question directly. You will closely study a generative AI tool of your choice (or one recommended in the syllabus), focused on one identity marker of your choosing — race, gender, language, class, disability, and so on — and back up what you find with real evidence.</p>
+    <p>Your prompt journal is where this pays off: you already have a dated collection of prompts and output analysis you've built all semester. Your final delivery is a creative, multimedia artifact, along with a written reflection that explains your methods, findings, and what you want your audience to understand.</p>
+
+    <h3 style="margin-top:34px;">Learning objectives</h3>
+    <div class="optgrid">
+      <div class="optcard"><h4>🔍 Analysis</h4><p>Apply feminist and intersectionality frameworks to explain how a generative AI system represents an identity marker, and why that representation matters.</p></div>
+      <div class="optcard"><h4>🧪 Method</h4><p>Design and carry out a systematic, documented study of an AI tool — a repeatable research practice, not casual prompting — whether you run it yourself or compile published evidence.</p></div>
+      <div class="optcard"><h4>🎨 Making</h4><p>Produce an original artifact that argues something through its form, applying the critical-making principles from Unit 3.</p></div>
+      <div class="optcard"><h4>🪞 Transparency</h4><p>Reflect honestly on the role AI played in your own process, and articulate what you learned about what it can and can't do.</p></div>
+    </div>
+
+    <h3 style="margin-top:34px;">How the semester built to this</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">01</div>
+        <div class="tl-body"><h4>Unit 1 — Seeing the design</h4><p>Feminist and intersectionality theories gave you a way of seeing that AI's design is not neutral, and what that means for identity.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">02</div>
+        <div class="tl-body"><h4>Unit 2 — Testing it on yourself</h4><p>You recorded what happens to your own language and cultural background inside these tools.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">03</div>
+        <div class="tl-body"><h4>Unit 3 — Reading the patterns</h4><p>You looked at those outputs for patterns of flattening, reconstruction, or erasure — and learned that making something can be real scholarship.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">04</div>
+        <div class="tl-body"><h4>Unit 4 — Making the argument</h4><p>Now you make something in response. This is that project, submitted in three parts below.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="work">
+    <span class="eyebrow">Three parts</span>
+    <h2>The work</h2>
+    <div class="tabbar" role="tablist">
+      <button class="tabbtn active" data-tab="journal" role="tab">Part 1 · Journal</button>
+      <button class="tabbtn" data-tab="artifact" role="tab">Part 2 · Artifact</button>
+      <button class="tabbtn" data-tab="reflection" role="tab">Part 3 · Reflection</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-journal">
+      <p>Your prompt journal is the foundation this whole assignment is built on. Beginning in Week 1, you have been recording: (1) the exact prompts you submitted, (2) the outputs those tools produced, and (3) your analysis of what changed, what was lost, and what was rebuilt differently. By the end of the semester your journal is a personal collection of evidence. Checkpoints are due Weeks 4, 8, and 12, with real, dated entries — not a batch written the night before.</p>
+      <details class="paper">
+        <summary>If you've been observing instead of prompting AI yourself</summary>
+        <div class="body">
+          <p>Some of you have used your journal all semester to record what you observed about AI — demonstrations in class, examples brought in from outside sources — rather than prompting systems yourselves, because of your own values. That is a complete, equal way of doing this project, not a lesser one.</p>
+          <p>For your Unit 4 project, gather at least fifteen documented AI outputs related to your identity marker from at least two sources you can cite — logged in-class demonstrations, published studies (e.g. Buolamwini and Gebru's Gender Shades study), news investigations, or a classmate's journal shared with permission. Write down the original source, date, and context for each one. This fully satisfies Part 1 and is graded on the same rubric as the direct-prompting path.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="tabpanel" id="tab-artifact">
+      <p>Your artifact is a creative, multimedia response to what you found in your prompt journal. It should do three things: make an argument, not just describe what you found; use its form on purpose, so the way it looks and works reflects your critique; and be something an audience outside the classroom could understand.</p>
+      <details class="paper">
+        <summary>How this is graded — skill is not the point</summary>
+        <div class="body">
+          <p>None of the options below assume you already know how to build them, and none are graded on how polished they look. A hand-drawn, photocopied zine and a professionally coded website can earn the same grade if the argument and the thoughtfulness of the choices are equally strong. Workshop time for each medium is built into the last two weeks of Unit 4 — but even without it, the simplest version of any option earns full credit.</p>
+        </div>
+      </details>
+      <div class="optgrid">
+        <div class="optcard"><h4>📓 Zine <span class="chip">digital or physical</span></h4><p>Long used in feminist and activist communities to reclaim narratives, so the medium itself can be part of your critique. If physical, photograph your process and product for Canvas.</p></div>
+        <div class="optcard"><h4>🌐 Website</h4><p>Build it yourself or use AI to help with design. Treat your design choices — including anywhere you used AI — as part of the argument itself.</p></div>
+        <div class="optcard"><h4>🗂️ GitHub</h4><p>A repository of files the public can see. Works well with Claude Code for turning design ideas into something real.</p></div>
+        <div class="optcard"><h4>💬 Something else</h4><p>Email me or book office hours to propose a different medium before you start.</p></div>
+      </div>
+      <div class="paper" style="margin-top:4px;">
+        <h4>Choosing not to use AI</h4>
+        <p>Every option above can be built entirely without AI tools — a hand-drawn zine, a hand-coded website, a GitHub repo with no AI-generated files. There is no separate "AI-free track." Whichever medium you pick, Decision B above is what determines whether AI touches your production process, and your reflection is where you explain the creative decisions either way. Graded the same either way.</p>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-reflection">
+      <p>Your reflection (500–800 words) explains your work as a scholar: the how and why behind your argument, your artifact design, and your choice of identity marker. Check off each part as you draft it:</p>
+      <ul class="checklist" id="checklist">
+        <li><input type="checkbox" id="c1"><label for="c1">Which identity marker you chose, and why.</label></li>
+        <li><input type="checkbox" id="c2"><label for="c2">The AI tool you studied (or the sources you gathered) and how you approached it.</label></li>
+        <li><input type="checkbox" id="c3"><label for="c3">Patterns you found across your journal, tied to the specific tool and marker.</label></li>
+        <li><input type="checkbox" id="c4"><label for="c4">How your specific feminist or intersectionality framework(s) shaped your analysis — name them.</label></li>
+        <li><input type="checkbox" id="c5"><label for="c5">If you brainstormed with AI: a note on where each idea came from, in your own words.</label></li>
+        <li><input type="checkbox" id="c6"><label for="c6">A full AI disclosure statement, with links and a transcript of chats or design generations.</label></li>
+      </ul>
+      <div class="progresswrap">
+        <div class="progressbar"><div class="progressbar-fill" id="progressfill"></div></div>
+        <span id="progresslabel">0 / 6 drafted</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="rubric">
+    <span class="eyebrow">40% of final grade</span>
+    <h2>Grading criteria</h2>
+    <p>This is a small, discussion-driven course rather than a large intro lecture, so grading here is a flexible, criteria-based rubric rather than a rigid point scale — the strongest submissions won't all look alike, especially across artifact types. Weights are listed for transparency; grading within each row is holistic.</p>
+    <table class="rubric-table">
+      <thead><tr><th>Criterion</th><th>Weight</th><th>What strong work looks like</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="crit">Journal &amp; evidence</td>
+          <td class="weight">25%</td>
+          <td><ul>
+            <li>Real, dated entries at all three checkpoints — not reconstructed the night before</li>
+            <li>Either 15+ controlled prompts across two AI systems, or (alternate path) 15+ compiled outputs from two citable sources</li>
+            <li>Outputs logged verbatim, with your own analysis of what changed, what was lost, what was rebuilt</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td class="crit">Argument &amp; frameworks</td>
+          <td class="weight">25%</td>
+          <td><ul>
+            <li>A named feminist or intersectionality framework doing real analytical work, not a passing citation</li>
+            <li>At least one Unit 4 reading (Williams, Gitelman &amp; Jackson, or Keralis) in real conversation with your findings</li>
+            <li>Claims are specific to your own evidence, not general statements about "how AI is"</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td class="crit">The artifact</td>
+          <td class="weight">30%</td>
+          <td><ul>
+            <li>Makes an argument through its form — not a summary of your journal in another format</li>
+            <li>Design and medium choices are intentional and explainable</li>
+            <li>Understandable to an audience outside the classroom</li>
+            <li>Graded on argument and intentionality, never on technical polish</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td class="crit">Reflection &amp; disclosure</td>
+          <td class="weight">20%</td>
+          <td><ul>
+            <li>All six reflection points addressed in 500–800 words</li>
+            <li>A complete AI disclosure, with links and transcripts</li>
+            <li>An honest idea-provenance note if AI was used for brainstorming</li>
+          </ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="examples">
+    <span class="eyebrow">Built with Claude</span>
+    <h2>Examples from my own work</h2>
+    <p class="lede">There's no student example bank yet, since this is a new assignment — so here are five of my own projects, made the same way yours will be: an AI audit or observation, followed by a made argument. These live on my GitHub at <a href="https://github.com/acsuarez84/AgenticDemoing" target="_blank" rel="noopener">github.com/acsuarez84/AgenticDemoing</a>; individual project links go in as soon as I confirm the exact page for each one. Click a card for the full story.</p>
+    <div class="gallerygrid" id="gallery"></div>
+  </section>
+
+  <section id="context">
+    <span class="eyebrow">For my professor</span>
+    <h2>A note on how my vision for the course changed</h2>
+    <div class="paper">
+      <p>Earlier drafts of this assignment treated "use AI or don't" as one switch, with a single AI-free essay option carrying the whole weight of that choice. Splitting it into two independent decisions — research method and production method — came directly out of your feedback, and it's a better fit for how students actually feel about these tools: someone can be fully willing to study an AI system while still refusing to let one touch their own creative work, or the reverse.</p>
+      <p>I also tightened the brainstorming permission into an actual guardrail after your note about offloading risk — students now have to show their own ideas first, on the record, before AI enters the room at all. And I made the grading promise explicit rather than implied: none of the artifact options assume prior technical skill, and craft was never meant to be the thing graded, but earlier drafts left that unstated. It isn't anymore.</p>
+      <p>Removing the two essay-based options was a smaller edit, made once the two-decision framework existed — they'd become redundant with what Zine, Website, and GitHub can already do, and consolidating kept the choice architecture cleaner for students to actually use.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Intersectional Machines — Signature Assignment, Unit 4. Built as a teaching-portfolio piece.</p>
+    <p>More work like this: <a href="https://github.com/acsuarez84/AgenticDemoing" target="_blank" rel="noopener">github.com/acsuarez84/AgenticDemoing</a></p>
+  </footer>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+    <span class="medium" id="modalMedium"></span>
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="argue" id="modalArgue"></div>
+    <p id="modalLink" style="margin-top:16px;"></p>
+  </div>
+</div>
+
+<script>
+  // ---- active nav highlighting ----
+  try {
+    const navLinks = document.querySelectorAll('[data-nav]');
+    if ('IntersectionObserver' in window) {
+      const sections = [...navLinks].map(a => document.querySelector(a.getAttribute('href')));
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if(en.isIntersecting){
+            const id = '#' + en.target.id;
+            navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === id));
+          }
+        });
+      }, { rootMargin: '-40% 0px -55% 0px' });
+      sections.forEach(s => s && io.observe(s));
+    }
+  } catch (e) { console.warn('Nav highlighting skipped:', e); }
+
+  // ---- decision fork ----
+  try {
+    const forkText = {
+      a: [
+        '<strong>Prompt it myself:</strong> log your own prompts and outputs in real time, all semester, in your prompt journal.',
+        '<strong>Compile published outputs:</strong> gather at least fifteen documented AI outputs from at least two citable sources (see Part 1 for the full alternate protocol).'
+      ],
+      b: [
+        '<strong>AI helps build it:</strong> use AI tools for layout, starter code, or image generation — log every use in your journal.',
+        '<strong>Build it AI-free:</strong> pick any of the artifact options in Part 2 and build it with no AI tools at all — your reflection explains the creative decisions you made instead.'
+      ]
+    };
+    document.querySelectorAll('.pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const fork = btn.dataset.fork, val = btn.dataset.val;
+        document.querySelectorAll('.pill[data-fork="'+fork+'"]').forEach(b => b.classList.toggle('sel', b === btn));
+        document.getElementById('fork-'+fork+'-desc').innerHTML = forkText[fork][val];
+      });
+    });
+  } catch (e) { console.warn('Decision fork skipped:', e); }
+
+  // ---- tabs ----
+  try {
+    document.querySelectorAll('.tabbtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+      });
+    });
+  } catch (e) { console.warn('Tabs skipped:', e); }
+
+  // ---- reflection checklist progress ----
+  try {
+    const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+    const fill = document.getElementById('progressfill');
+    const label = document.getElementById('progresslabel');
+    function updateProgress(){
+      const done = [...boxes].filter(b => b.checked).length;
+      fill.style.width = (done/boxes.length*100) + '%';
+      label.textContent = done + ' / ' + boxes.length + ' drafted';
+    }
+    boxes.forEach(b => b.addEventListener('change', updateProgress));
+  } catch (e) { console.warn('Checklist progress skipped:', e); }
+
+  // ---- examples gallery ----
+  try {
+    const projects = [
+      {
+        medium: 'Interactive 3D comic · LLM audit',
+        title: 'Hair as Narrative',
+        url: null,
+        blurb: "Audited how Claude, ChatGPT, and Translinguo interpreted the same photograph of myself, then built a 3D comic where each panel follows a stage of the machine's processing.",
+        argue: 'The systems defaulted to homogenized, stereotypical language about Bronx and Dominican identity even when neither was specified — the comic makes that finding an argument instead of a caption.'
+      },
+      {
+        medium: 'Textile visualization · Feminist historiography',
+        title: 'Women, Textiles, and Rhetorical Patterns',
+        url: null,
+        blurb: 'Analyzed four historical textile texts for how they described women as creators, surfacing five recurring patterns: Divine Originators, Wise-Hearted Spinners, Named Artisans, the Anonymous Collective, and Transgressive Bodies.',
+        argue: "From that vocabulary, I regenerated new compound words — silkgoddess, threadmother, spinfire, bodyweave, loom-luminous — turning the archive's own silences into new language, following Chachra's critique in 'Beyond Making.'"
+      },
+      {
+        medium: 'Interactive tool · Comparative AI analysis',
+        title: 'Conceptual Tension Map',
+        url: null,
+        blurb: 'A three-zone tool (green, amber, red) mapping where AI language models help, mislead, or fail entirely across eight areas: code-switching, cultural reference, rhetoric of resistance, and more.',
+        argue: 'Intersectional identity markers landed squarely in the "amber" zone — capable-looking outputs that quietly mislead — which is close to the exact method this assignment asks you to run yourself.'
+      },
+      {
+        medium: 'p5.js generative system',
+        title: 'Combinations',
+        url: null,
+        blurb: 'A generative textile-to-poetry system: fabric patterns are translated into words, and the words are woven back into visual texture.',
+        argue: 'Framed by the same idea as the textile project — that craft and care labor, disproportionately done by women, are excluded from what "counts" as making.'
+      },
+      {
+        medium: 'Bitsy game · 4 interactive rooms',
+        title: '"write me"',
+        url: null,
+        blurb: 'A small playable game about the writing process itself — four rooms (The Blank Page, Brainstorm, The Draft, The Toolbox), each with characters who argue for a different way of writing.',
+        argue: "Proof that critical making doesn't have to be solemn — play is a legitimate register for scholarly argument too."
+      }
+    ];
+    const gallery = document.getElementById('gallery');
+    projects.forEach((p, i) => {
+      const card = document.createElement('button');
+      card.className = 'gcard';
+      card.innerHTML = '<span class="medium">'+p.medium+'</span><h3>'+p.title+'</h3><p class="blurb">'+p.blurb+'</p><span class="openhint">Click to read more →</span>';
+      card.addEventListener('click', () => openModal(p));
+      gallery.appendChild(card);
+    });
+
+    const backdrop = document.getElementById('modalBackdrop');
+    function openModal(p){
+      document.getElementById('modalMedium').textContent = p.medium;
+      document.getElementById('modalTitle').textContent = p.title;
+      document.getElementById('modalBody').textContent = p.blurb;
+      document.getElementById('modalArgue').textContent = p.argue;
+      const linkEl = document.getElementById('modalLink');
+      if(p.url){
+        linkEl.innerHTML = '<a href="'+p.url+'" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:.8rem;">View the project →</a>';
+      } else {
+        linkEl.innerHTML = '<span style="font-family:var(--mono);font-size:.75rem;color:var(--ink-text-dim);">Live link coming soon — see the full repo at github.com/acsuarez84/AgenticDemoing</span>';
+      }
+      backdrop.classList.add('open');
+    }
+    function closeModal(){ backdrop.classList.remove('open'); }
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    backdrop.addEventListener('click', (e) => { if(e.target === backdrop) closeModal(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+  } catch (e) { console.warn('Examples gallery skipped:', e); }
+</script>
+</body>
+</html>
